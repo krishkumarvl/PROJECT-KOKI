@@ -1,4 +1,4 @@
-# Project KOKI — Day 2
+# Project KOKI — Day 3
 # Dictionary brain + session memory
    #random isiliye use kra taki thoda robotic feel na aaye....
 from datetime import datetime
