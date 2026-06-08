@@ -1,8 +1,9 @@
-# Project KOKI — Day 3
-# Dictionary brain + session memory
+# Project KOKI — Day 4
+# Dictionary brain + session memory + file memory
    #random isiliye use kra taki thoda robotic feel na aaye....
 from datetime import datetime
 import random
+MEMORY_FILE = "memory.txt"
 
 responses = { #bahut se random responses daal diye ab ek word pr iske pass 3 alag alag response ho skte hai for exam hello type krne pr hi there bhi aa skta hai aur kya haal hai bhi...{aage dikkat nhi aani chahiye}
     "hello": ["Hey! Good to see you.", "Hello! Kya haal hai?", "Hi there!"],
@@ -28,10 +29,40 @@ responses = { #bahut se random responses daal diye ab ek word pr iske pass 3 ala
     }
 
 conversation_count = 0
-        # def function iska response decide krega based on use input
+# KOKI ko band krne ke multiple commands
+exit_words = [
+    "bye",
+    "exit",
+    "quit",
+    "band ho ja",
+    "goodbye"
+]
+        # def function iska response decide krega based on use input 
+        #sabse pehle memory functions yeh store krenge aur fir dictionary based responses denge
+        #========memory functions=========
+
+def load_memory():
+    try:
+        with open(MEMORY_FILE, "r", encoding="utf-8") as file:
+            return file.readline().strip()
+    except FileNotFoundError:
+        return ""
+
+def save_memory(text):
+    with open(MEMORY_FILE, "w", encoding="utf-8") as file:
+        file.write(text + "\n")
+
+        #=========main functions =========
+
 def greet():
+    print("=" * 40)
+    print("   KOKI v1 - Your Personal AI")
+    print("   Built by Krish Kumar")
+    print("=" * 40)
     name = input("KOKI: What's your name? ")
-    print("KOKI: Hello " + name + "! I am KOKI. Still learning, but I'm here.")
+    print("KOKI: Hello " + name + "! I am KOKI.")
+    print("KOKI: I understand " + str(len(responses)) + " topics right now.")
+    print("KOKI: And I'm learning more every day.")
     return name
 
 def listen():
@@ -46,28 +77,78 @@ def respond(msg, name):
     conversation_count += 1
     #matching ke liye use kra lower case ka taki Hello ya Fir hello same lage
     msg = msg.lower().strip()
+
+    #======remember commands========
+    #agar user ne koi aisi baat kahi jo KOKI ko yaad rakhni chahiye, toh usko identify karke memory me save krna hoga
+    if msg.startswith("remember "):
+        memory = msg.replace("remember ", "")
+
+        with open(MEMORY_FILE, "a") as file:
+            file.write(memory + "\n")
+
+        print("KOKI: I'll remember that.")
+        return True
     
+    #=========Recall Memory========
+    #agar user ne koi aisi baat kahi jo KOKI ko yaad karni chahiye, toh usko identify karke memory se recall krna hoga
+    if msg == "what do you remember":
+        try:
+            with open(MEMORY_FILE, "r") as file:
+                memories = file.readlines()
+
+            print("KOKI: Here's what I remember:")
+
+            for memory in memories[1:]:
+                print("- " + memory.strip())
+
+        except:
+            print("KOKI: I don't remember anything yet.")
+
+        return True
+    
+    matched = False
+
+    # dictionary matching
+    # user ke message me keyword dhundho
+    # fir us keyword ka random response do
+
     for key in responses:
         if key in msg:
+
             reply = random.choice(responses[key])
+
             # populate dynamic time if needed
             if "{time}" in reply:
                 reply = reply.format(time=get_time())
+
             print("KOKI: " + reply)
+
+            matched = True
+
             if conversation_count == 5:
                 print("KOKI: 5 messages already " + name + ". I like talking to you.")
-            return True
-    
-    print("KOKI: Still learning " + name + ". I don't know this yet.")
+
+            break
+
+    if not matched:
+        print("KOKI: Still learning " + name + ". I don't know this yet.")
+
     return True
 
 # Start
 name = greet()
 running = True
+
 while running:
     msg = listen()
-    if "bye" in msg.lower():
+
+    # agar user kisi bhi exit word ka use kre
+    # to KOKI band ho jayega
+
+    if any(word in msg.lower() for word in exit_words):
+
         print("KOKI: Goodbye " + name + ". See you tomorrow.")
         running = False
+
     else:
         respond(msg, name)
